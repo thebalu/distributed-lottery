@@ -6,10 +6,10 @@ contract ('Lottery', (accounts) => {
   var contractAddress;
 
   it('should set the owner correctly', async () => {
-    contractInstance = await Lottery.deployed();
-    assert.equal(contractInstance.owner, accounts[0]);
+    lot = await Lottery.deployed();
+    own = await lot.owner();
+    assert.equal(own, accounts[0]);
   });
-
 
 });
 
@@ -30,3 +30,33 @@ contract ('Lottery', (accounts) => {
 //   assert.equal(contractInstance.address, "0x0", "this should also fail");
 //
 // });
+
+
+
+// working version with awaits
+  //
+  // it('should set the owner correctly', async () => {
+  //   var contractInstance;
+  //   //var inst2 = await Lottery.deployed();
+  //   return Lottery.deployed().then( instance => {
+  //
+  //     //  assert.equal(1,2);
+  //       lot = instance;
+  //       return lot.owner();
+  //     }).then(own => {
+  //     //  console.log(own);
+  //       assert.equal(own, accounts[0]);
+  //     });
+  //   });
+  //
+  // it('should set the owner correctly2', async () => {
+  //   var contractInstance;
+  //   lot2 = await Lottery.deployed();
+  //   own2 = await lot2.owner();
+  //   console.log("o2");
+  //   console.log(own2);
+  //     // assert.equal(contractInstance.owner(), accounts[0]);
+  // //    console.log(lot);
+  // //  console.log("---------------------------------------------")
+  // //  console.log(Lottery);
+  // });
