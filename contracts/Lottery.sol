@@ -30,7 +30,20 @@ contract Lottery {
 
 
   function finalize() public onlyOwner {
+    // stop accepting bets
+    // generate random number
+    uint winningNumber= 5; // placeholder
+    if(winnersCount(winningNumber) == 0 ) {
+      // refund
+    } else if(winnersCount(winningNumber) == 1) {
+      // transfer to the winner
+    } else {
+      // distribute
+    }
+  }
 
+  function winnersCount(uint winningNumber) private returns (uint){
+    return address[winningNumber].length();
   }
 
 }
