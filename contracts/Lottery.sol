@@ -5,8 +5,13 @@ contract Lottery {
   address public owner;
   mapping (address => uint) balances; // used for preventing multiple entries
   address [][21] entries; // each of the 21 arrays contains the addresses placing a bet on that number
-
   uint constant feePercent = 30;
+
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+
 
   function Lottery() public {
     owner = msg.sender;
@@ -21,6 +26,11 @@ contract Lottery {
 
     balances[msg.sender]+= (msg.value - fee);
     entries[x].push(msg.sender);
+  }
+
+
+  function finalize() public onlyOwner {
+
   }
 
 }
