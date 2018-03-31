@@ -1,15 +1,57 @@
 var Lottery = artifacts.require("Lottery");
 
+
 contract ('Lottery', (accounts) => {
 
   var creatorAddress = accounts[0];
   var contractAddress;
+  var lot;
+
+  beforeEach( async () => {
+    lot=await Lottery.deployed();
+  });
 
   it('should set the owner correctly', async () => {
-    lot = await Lottery.deployed();
+    //lot = await Lottery.deployed();
     own = await lot.owner();
     assert.equal(own, accounts[0]);
   });
+
+describe('bet()', () => {
+  it('requires that 1<=x<=20', async () => {
+
+      let err = null;
+      try {
+        await lot.bet(0);
+      } catch (e) {
+        err = e;
+      }
+      assert.ok(err instanceof Error, 'should have reverted')
+      assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+
+      err = null;
+      try {
+        await lot.bet(21);
+      } catch (e) {
+        err = e;
+      }
+      assert.ok(err instanceof Error, 'should have reverted')
+      assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+  });
+
+  it('doesnt allow multiple entries', async () => {
+    let err = null;
+    await lot.bet(15);
+    try {
+      await lot.bet(4);
+    } catch (e) {
+      err = e;
+    }
+    assert.ok(err instanceof Error, 'should have reverted')
+    assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+  });
+});
+
 
 });
 
