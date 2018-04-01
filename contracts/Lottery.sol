@@ -59,11 +59,30 @@ contract Lottery {
       }
     } else {
       // distribute between winners
+      uint moneyLeft = totalPot;
       for(j = 0; j < entries[winningNumber].length; j++) {
-        //emit Div( balances[entries[winningNumber][j]] / sumOfBetsOn[winningNumber] );
-        emit Div( 7/uint(1234) );
+        pendingWithdrawals[entries[winningNumber][j]] +=
+              balances[entries[winningNumber][j]] * totalPot / uint(sumOfBetsOn[winningNumber]);
+        moneyLeft -= balances[entries[winningNumber][j]] * totalPot / uint(sumOfBetsOn[winningNumber]);
+      }
+
+      // if some wei remains because of int division, make it withdrawable by owner
+      pendingWithdrawals[owner] += moneyLeft;
+      moneyLeft = 0;
+
+      //zero all balances
+      for( i=1; i<=20; i++) {
+        for( j=0; j<entries[i].length; j++) {
+          balances[entries[i][j]] = 0;
+        }
+
       }
     }
+
+    // reset contract:
+    totalPot = 0;
+    // remove all entries
+    // start accepting bets
   }
 
 }
