@@ -6,6 +6,7 @@ contract Lottery {
   mapping (address => uint) balances; // used for preventing multiple entries
   address [][21] entries; // each of the 21 arrays contains the addresses placing a bet on that number
   uint constant feePercent = 30;
+  mapping (address => uint) pendingWithdrawals;
 
   modifier onlyOwner() {
     require(msg.sender == owner);
@@ -33,17 +34,27 @@ contract Lottery {
     // stop accepting bets
     // generate random number
     uint winningNumber= 5; // placeholder
-    if(winnersCount(winningNumber) == 0 ) {
-      // refund
-    } else if(winnersCount(winningNumber) == 1) {
+    if(entries[winningNumber].length() == 0 ) {
+      // refund all
+      for(int i=1; i<=20; i++) {
+        for(int j=0; j<entries[i].length(); j++) {
+          pendingWithdrawals[entries[i][j]] += balances[entries[i][j]];
+          balances[entries[i][j]] = 0;
+        }
+      }
+    } else if(entries[winningNumber].length() == 1) {
       // transfer to the winner
+      address winner = entries[winningNumber][0];
+      for(int i=1; i<=20; i++) {
+        for(int j=0; j<entries[i].length(); j++) {
+          pendingWithdrawals[winner] += balances[entries[i][j]];
+          balances[entries[i][j]] = 0;
+        }
+      }
     } else {
       // distribute
-    }
-  }
 
-  function winnersCount(uint winningNumber) private returns (uint){
-    return address[winningNumber].length();
+    }
   }
 
 }
