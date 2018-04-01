@@ -6,11 +6,11 @@ contract Lottery {
   mapping (address => uint) balances; // used for preventing multiple entries
   address [][21] entries; // each of the 21 arrays contains the addresses placing a bet on that number
   uint constant feePercent = 30;
-  mapping (address => uint) pendingWithdrawals;
+  mapping (address => uint) public pendingWithdrawals;
   uint public totalPot = 0;
-  uint[21] sumOfBetsOn;
+  uint[21] public sumOfBetsOn;
 
-  event Div(uint x);
+  event Wins(address addr, uint amount);
 
   modifier onlyOwner() {
     require(msg.sender == owner);
@@ -46,6 +46,7 @@ contract Lottery {
         for(uint j=0; j<entries[i].length; j++) {
           pendingWithdrawals[entries[i][j]] += balances[entries[i][j]];
           balances[entries[i][j]] = 0;
+          emit Wins(entries[i][j], pendingWithdrawals[entries[i][j]]);
         }
       }
     } else if(entries[winningNumber].length == 1) {
@@ -57,6 +58,8 @@ contract Lottery {
           balances[entries[i][j]] = 0;
         }
       }
+      emit Wins(winner, pendingWithdrawals[winner]);
+
     } else {
       // distribute between winners
       uint moneyLeft = totalPot;
@@ -64,6 +67,9 @@ contract Lottery {
         pendingWithdrawals[entries[winningNumber][j]] +=
               balances[entries[winningNumber][j]] * totalPot / uint(sumOfBetsOn[winningNumber]);
         moneyLeft -= balances[entries[winningNumber][j]] * totalPot / uint(sumOfBetsOn[winningNumber]);
+
+        emit Wins(entries[winningNumber][j], pendingWithdrawals[entries[winningNumber][j]]);
+
       }
 
       // if some wei remains because of int division, make it withdrawable by owner
@@ -75,14 +81,21 @@ contract Lottery {
         for( j=0; j<entries[i].length; j++) {
           balances[entries[i][j]] = 0;
         }
-
       }
     }
 
-    // reset contract:
+    // reset contract
     totalPot = 0;
-    // remove all entries
-    // start accepting bets
+    delete entries;
+    delete sumOfBetsOn;
   }
+
+  function withdraw() public {
+        uint amount = pendingWithdrawals[msg.sender];
+        // Remember to zero the pending refund before
+        // sending to prevent re-entrancy attacks
+        pendingWithdrawals[msg.sender] = 0;
+        msg.sender.transfer(amount);
+    }
 
 }
