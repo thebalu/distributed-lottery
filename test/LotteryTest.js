@@ -17,52 +17,67 @@ contract ('Lottery', (accounts) => {
     assert.equal(own, accounts[0]);
   });
 
-describe('bet()', () => {
-  it('requires that 1<=x<=20', async () => {
+  describe('bet()', () => {
+    it('requires that 1<=x<=20', async () => {
 
-      let err = null;
-      try {
-        await lot.bet(0,{value:1,from:accounts[1]});
-      } catch (e) {
-        err = e;
-      }
-      assert.ok(err instanceof Error, 'should have reverted')
-      assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+        let err = null;
+        try {
+          await lot.bet(0,{value:1,from:accounts[1]});
+        } catch (e) {
+          err = e;
+        }
+        assert.ok(err instanceof Error, 'should have reverted')
+        assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
 
-      err = null;
-      try {
-        await lot.bet(21,{value:1,from:accounts[1]});
-      } catch (e) {
-        err = e;
-      }
-      assert.ok(err instanceof Error, 'should have reverted')
-      assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
-  });
+        err = null;
+        try {
+          await lot.bet(21,{value:1,from:accounts[1]});
+        } catch (e) {
+          err = e;
+        }
+        assert.ok(err instanceof Error, 'should have reverted')
+        assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+      });
 
-    it('requires value>0', async () => {
+      it('requires value>0', async () => {
 
-      let err = null;
-      try{
-        await lot.bet(1,{value:0,from:accounts[1]});
-      } catch(e) {
-        err=e;
-      }
-      assert.ok(err instanceof Error, 'should have reverted')
-      assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+        let err = null;
+        try{
+          await lot.bet(1,{value:0,from:accounts[1]});
+        } catch(e) {
+          err=e;
+        }
+        assert.ok(err instanceof Error, 'should have reverted')
+        assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+      });
+      it('doesnt allow multiple entries', async () => {
+        let err = null;
+        await lot.bet(15,{value:10,from:accounts[1]});
+        try {
+          await lot.bet(4,{value:10,from:accounts[1]});
+        } catch (e) {
+          err = e;
+        }
+        assert.ok(err instanceof Error, 'should have reverted')
+        assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+      });
+
     });
-  it('doesnt allow multiple entries', async () => {
-    let err = null;
-    await lot.bet(15,{value:10,from:accounts[1]});
-    try {
-      await lot.bet(4,{value:10,from:accounts[1]});
-    } catch (e) {
-      err = e;
-    }
-    assert.ok(err instanceof Error, 'should have reverted')
-    assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
-  });
 
-});
+    describe('finalize()' , () => {
+
+      it('can only be called by owner', async () => {
+        let err = null;
+        try{
+          await lot.finalize({from:accounts[1]});
+        } catch(e) {
+          err=e;
+        }
+        assert.ok(err instanceof Error, 'should have reverted')
+        assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
+      });
+
+    });
 
 
 });

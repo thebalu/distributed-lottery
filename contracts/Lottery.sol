@@ -1,6 +1,6 @@
 pragma solidity ^0.4.21;
 
-contract Lottery {
+contract Lottery{
 
   address public owner;
   mapping (address => uint) balances; // used for preventing multiple entries
@@ -10,7 +10,9 @@ contract Lottery {
   uint public totalPot = 0;
   uint[21] public sumOfBetsOn;
 
-  event Wins(address addr, uint amount);
+  event EntryPlaced(address _addr, uint _guessedNumber, uint _sentValue, uint _fee, uint _balance);
+  event NoWinner(uint _winningNumber);
+  event CorrectGuess(address _winner, uint _winnings, uint _pendingWithdrawal);
 
   modifier onlyOwner() {
     require(msg.sender == owner);
@@ -33,22 +35,23 @@ contract Lottery {
     entries[x].push(msg.sender);
     sumOfBetsOn[x] += msg.value - fee;
     totalPot += msg.value - fee;
+
+    emit EntryPlaced(msg.sender, x, msg.value, fee, balances[msg.sender]);
   }
 
 
   function finalize() public onlyOwner {
-    // stop accepting bets
     // generate random number
     uint winningNumber = 5; // placeholder
     if(entries[winningNumber].length == 0 ) {
-      // refund all
+      // no winner, refund each
       for(uint i=1; i<=20; i++) {
         for(uint j=0; j<entries[i].length; j++) {
           pendingWithdrawals[entries[i][j]] += balances[entries[i][j]];
           balances[entries[i][j]] = 0;
-          emit Wins(entries[i][j], pendingWithdrawals[entries[i][j]]);
         }
       }
+      emit NoWinner(winningNumber);
     } else if(entries[winningNumber].length == 1) {
       // transfer to the winner
       address winner = entries[winningNumber][0];
@@ -58,17 +61,17 @@ contract Lottery {
           balances[entries[i][j]] = 0;
         }
       }
-      emit Wins(winner, pendingWithdrawals[winner]);
-
+      emit CorrectGuess(winner, totalPot, pendingWithdrawals[winner]);
     } else {
       // distribute between winners
       uint moneyLeft = totalPot;
+      uint amount;
       for(j = 0; j < entries[winningNumber].length; j++) {
-        pendingWithdrawals[entries[winningNumber][j]] +=
-              balances[entries[winningNumber][j]] * totalPot / uint(sumOfBetsOn[winningNumber]);
-        moneyLeft -= balances[entries[winningNumber][j]] * totalPot / uint(sumOfBetsOn[winningNumber]);
+        amount = balances[entries[winningNumber][j]] * totalPot / uint(sumOfBetsOn[winningNumber]);
+        pendingWithdrawals[entries[winningNumber][j]] += amount;
+        moneyLeft -= amount;
 
-        emit Wins(entries[winningNumber][j], pendingWithdrawals[entries[winningNumber][j]]);
+        emit CorrectGuess(entries[winningNumber][j], amount, pendingWithdrawals[entries[winningNumber][j]]);
 
       }
 
@@ -92,8 +95,6 @@ contract Lottery {
 
   function withdraw() public {
         uint amount = pendingWithdrawals[msg.sender];
-        // Remember to zero the pending refund before
-        // sending to prevent re-entrancy attacks
         pendingWithdrawals[msg.sender] = 0;
         msg.sender.transfer(amount);
     }
