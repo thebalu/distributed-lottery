@@ -7,6 +7,10 @@ contract Lottery {
   address [][21] entries; // each of the 21 arrays contains the addresses placing a bet on that number
   uint constant feePercent = 30;
   mapping (address => uint) pendingWithdrawals;
+  uint public totalPot = 0;
+  uint[21] sumOfBetsOn;
+
+  event Div(uint x);
 
   modifier onlyOwner() {
     require(msg.sender == owner);
@@ -27,33 +31,38 @@ contract Lottery {
 
     balances[msg.sender]+= (msg.value - fee);
     entries[x].push(msg.sender);
+    sumOfBetsOn[x] += msg.value - fee;
+    totalPot += msg.value - fee;
   }
 
 
   function finalize() public onlyOwner {
     // stop accepting bets
     // generate random number
-    uint winningNumber= 5; // placeholder
-    if(entries[winningNumber].length() == 0 ) {
+    uint winningNumber = 5; // placeholder
+    if(entries[winningNumber].length == 0 ) {
       // refund all
-      for(int i=1; i<=20; i++) {
-        for(int j=0; j<entries[i].length(); j++) {
+      for(uint i=1; i<=20; i++) {
+        for(uint j=0; j<entries[i].length; j++) {
           pendingWithdrawals[entries[i][j]] += balances[entries[i][j]];
           balances[entries[i][j]] = 0;
         }
       }
-    } else if(entries[winningNumber].length() == 1) {
+    } else if(entries[winningNumber].length == 1) {
       // transfer to the winner
       address winner = entries[winningNumber][0];
-      for(int i=1; i<=20; i++) {
-        for(int j=0; j<entries[i].length(); j++) {
+      for( i=1; i<=20; i++) {
+        for( j=0; j<entries[i].length; j++) {
           pendingWithdrawals[winner] += balances[entries[i][j]];
           balances[entries[i][j]] = 0;
         }
       }
     } else {
-      // distribute
-
+      // distribute between winners
+      for(j = 0; j < entries[winningNumber].length; j++) {
+        //emit Div( balances[entries[winningNumber][j]] / sumOfBetsOn[winningNumber] );
+        emit Div( 7/uint(1234) );
+      }
     }
   }
 
