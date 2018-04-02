@@ -77,6 +77,7 @@ contract ('Lottery', (accounts) => {
         assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
       });
 
+
     });
 
 
