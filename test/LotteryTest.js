@@ -8,7 +8,8 @@ contract ('Lottery', (accounts) => {
   var lot;
 
   beforeEach( async () => {
-    lot=await Lottery.deployed();
+    //lot=await Lottery.new();
+    return Lottery.new().then(function(instance) {lot = instance});
   });
 
   it('should set the owner correctly', async () => {
@@ -19,7 +20,6 @@ contract ('Lottery', (accounts) => {
 
   describe('bet()', () => {
     it('requires that 1<=x<=20', async () => {
-
         let err = null;
         try {
           await lot.bet(0,{value:1,from:accounts[1]});
@@ -62,6 +62,11 @@ contract ('Lottery', (accounts) => {
         assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
       });
 
+      it('works with correct entry', async () => {
+        await lot.bet(3,{value: 100, from:accounts[6]});
+
+      });
+
     });
 
     describe('finalize()' , () => {
@@ -76,10 +81,28 @@ contract ('Lottery', (accounts) => {
         assert.ok(err instanceof Error, 'should have reverted')
         assert.isAbove(err.message.search('revert'), -1, 'error message should have contained "revert"');
       });
-
-
     });
 
+    describe('oraclize callback (fake/local)' , () => {
+
+      it('should refund bets if there are no winners', async () => {
+
+        await lot.bet(5,{value:10,from:accounts[1]});
+        await lot.bet(6,{from:accounts[2], value: 20000});
+        await lot.bet(7,{from:accounts[3], value: 100000});
+
+        // await lot.finalize();
+        await lot.__callback(0, 3); // fake random number: 3
+
+
+        /// @TODO fix
+        assert.equal(await lot.pendingWithdrawals(accounts[1]), 7000);
+        assert.equal(await lot.pendingWithdrawals(accounts[2]), 14000);
+        assert.equal(await lot.pendingWithdrawals(accounts[3]), 70000);
+
+
+      });
+    });
 
 });
 
