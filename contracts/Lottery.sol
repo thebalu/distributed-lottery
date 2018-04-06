@@ -63,7 +63,7 @@ contract Lottery is usingOraclize {
       acceptingBets = true;
       revert();
     } else {
-      oraclizeID = oraclize_query("WolframAlpha", "random number between 1 and 20", 3000000);
+      oraclizeID = oraclize_query("WolframAlpha", "random number between 1 and 20", 2000000);
       emit LogOraclize("Oraclize query successfully sent.");
     }
 

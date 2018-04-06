@@ -83,28 +83,90 @@ contract ('Lottery', (accounts) => {
       });
     });
 
+    // Fake tests locally
     describe('oraclize callback (fake/local)' , () => {
 
       it('should refund bets if there are no winners', async () => {
 
-        await lot.bet(5,{value:10,from:accounts[1]});
+        await lot.bet(5,{from:accounts[1], value: 10});
         await lot.bet(6,{from:accounts[2], value: 20000});
         await lot.bet(7,{from:accounts[3], value: 100000});
 
         // await lot.finalize();
-        await lot.__callback(0, 3); // fake random number: 3
+        await lot.__callback(0, '3'); // fake random number: 3
 
-
-        /// @TODO fix
-        assert.equal(await lot.pendingWithdrawals(accounts[1]), 7000);
-        assert.equal(await lot.pendingWithdrawals(accounts[2]), 14000);
-        assert.equal(await lot.pendingWithdrawals(accounts[3]), 70000);
+        assert.equal((await lot.pendingWithdrawals(accounts[1])).toNumber(), 7);
+        assert.equal((await lot.pendingWithdrawals(accounts[2])).toNumber(), 14000);
+        assert.equal((await lot.pendingWithdrawals(accounts[3])).toNumber(), 70000);
 
 
       });
-    });
 
-});
+      it('should handle one winner', async () => {
+
+        await lot.bet(5,{from:accounts[1], value: 10000});
+        await lot.bet(6,{from:accounts[2], value: 20000});
+        await lot.bet(7,{from:accounts[3], value: 30000});
+
+        // await lot.finalize();
+        await lot.__callback(0, '5'); // fake random number: 5
+
+        assert.equal((await lot.pendingWithdrawals(accounts[1])).toNumber(), 42000);
+
+      });
+
+      it('should handle two winners', async () => {
+
+        await lot.bet(2,{from:accounts[1], value: 10000});
+        await lot.bet(2,{from:accounts[2], value: 20000});
+        await lot.bet(7,{from:accounts[3], value: 30000});
+        await lot.bet(8,{from:accounts[4], value: 40000});
+
+        // await lot.finalize();
+        await lot.__callback(0, '2'); // fake random number: 2
+
+        assert.equal((await lot.pendingWithdrawals(accounts[1])).toNumber(), 23333);
+        assert.equal((await lot.pendingWithdrawals(accounts[2])).toNumber(), 46666);
+        assert.equal((await lot.pendingWithdrawals(accounts[0])).toNumber(), 1); // rounding errors
+
+      });
+
+      it('should handle three winners', async () => {
+
+        await lot.bet(2,{from:accounts[1], value: 10000});
+        await lot.bet(2,{from:accounts[2], value: 20000});
+        await lot.bet(2,{from:accounts[3], value: 30000});
+
+        // await lot.finalize();
+        await lot.__callback(0, '2'); // fake random number: 2
+
+        assert.equal((await lot.pendingWithdrawals(accounts[1])).toNumber(), 7000);
+        assert.equal((await lot.pendingWithdrawals(accounts[2])).toNumber(), 14000);
+        assert.equal((await lot.pendingWithdrawals(accounts[3])).toNumber(), 21000);
+      });
+
+      // it('listens to events', async () => {
+      //
+      //   var bet = await lot.bet(2,{from:accounts[1], value: 10000});
+      //   //await lot.bet(2,{from:accounts[2], value: 20000});
+      //   //await lot.bet(2,{from:accounts[3], value: 30000});
+      //
+      //   bet.watch( function(error, result) {
+      //     if (!error)
+      //       alert("wait for a while, check for block Synchronization or block creation");
+      //     console.log(result);
+      //   })
+      //
+      //   // await lot.finalize();
+      //   await lot.__callback(0, '2'); // fake random number: 2
+      //
+      //   assert.equal((await lot.pendingWithdrawals(accounts[1])).toNumber(), 7000);
+      //   assert.equal((await lot.pendingWithdrawals(accounts[2])).toNumber(), 14000);
+      //   assert.equal((await lot.pendingWithdrawals(accounts[3])).toNumber(), 21000);
+      // });
+
+    }); // describe
+}); // contract
 
 
 // For reference:
