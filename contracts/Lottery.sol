@@ -3,13 +3,13 @@ import "./oraclizeAPI_0.5.sol";
 
 contract Lottery is usingOraclize {
 
-  address public owner;
+  address private owner;
   mapping (address => uint) public balances; // preventing multiple entries
-  address [][21] public entries; // each of the 21 arrays contains the addresses placing a bet on that number
-  uint constant feePercent = 30;
+  address [][21] private entries; // each of the 21 arrays contains the addresses placing a bet on that number
+  uint constant public feePercent = 30;
   mapping (address => uint) public pendingWithdrawals;
   uint public totalPot = 0;
-  uint[21] public sumOfBetsOn;
+  uint[21] private sumOfBetsOn;
   uint private winningNumber;
   bool public acceptingBets;
   bytes32 private oraclizeID;
@@ -25,7 +25,6 @@ contract Lottery is usingOraclize {
     require(msg.sender == owner);
     _;
   }
-
 
   function Lottery() public {
     owner = msg.sender;
@@ -59,7 +58,7 @@ contract Lottery is usingOraclize {
 
     // generate random number
     if (oraclize_getPrice("WolframAlpha") > msg.value) {
-      emit LogOraclize("Oraclize query not sent because of insufficient funds.");
+      emit LogOraclize("Oraclize query not sent because of insufficient funds. Send more ether.");
       acceptingBets = true;
       revert();
     } else {
@@ -72,7 +71,9 @@ contract Lottery is usingOraclize {
   // This function will be called by Oraclize.
   // Sets the winning number, and calls the function to distribute winnings.
   function __callback(bytes32 _oraclizeID, string _result) public {
-    /* assert (msg.sender == oraclize_cbAddress()); */ // comment out for tests to run
+    assert (msg.sender == oraclize_cbAddress()); // comment out for tests to run
+    assert (_oraclizeID == oraclizeID);
+
     winningNumber = parseInt(_result);
     emit LogOraclize("Callback updated winningNumber.");
     checkForWinners();
@@ -140,7 +141,7 @@ contract Lottery is usingOraclize {
     }
   }
 
-
+  // Safe way to withdraw the winnings
   function withdraw() public {
         uint amount = pendingWithdrawals[msg.sender];
         pendingWithdrawals[msg.sender] = 0;
