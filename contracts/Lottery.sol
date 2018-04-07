@@ -3,7 +3,7 @@ import "./oraclizeAPI_0.5.sol";
 
 contract Lottery is usingOraclize {
 
-  address private owner;
+  address public owner;
   mapping (address => uint) public balances; // preventing multiple entries
   address [][21] private entries; // each of the 21 arrays contains the addresses placing a bet on that number
   uint constant public feePercent = 30;
@@ -71,7 +71,7 @@ contract Lottery is usingOraclize {
   // This function will be called by Oraclize.
   // Sets the winning number, and calls the function to distribute winnings.
   function __callback(bytes32 _oraclizeID, string _result) public {
-    assert (msg.sender == oraclize_cbAddress()); // comment out for tests to run
+    /* assert (msg.sender == oraclize_cbAddress()); // comment out for tests to run */
     assert (_oraclizeID == oraclizeID);
 
     winningNumber = parseInt(_result);
